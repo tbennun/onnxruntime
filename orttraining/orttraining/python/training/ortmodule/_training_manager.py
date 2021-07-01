@@ -24,9 +24,10 @@ class TrainingManager(GraphExecutionManager):
     def __init__(self, model, debug_options):
         super().__init__(model, debug_options)
         self._export_mode = torch.onnx.TrainingMode.TRAINING
+        self._cache = None
 
     @staticmethod
-    def execution_session_run_forward(execution_session, onnx_model, *inputs):
+    def execution_session_run_forward(execution_session, onnx_model, cache, cache_names, cache_start, *inputs):
         """Runs the forward graph on execution_session with given model inputs and device"""
 
         # TODO: Try to reuse the output buffers as some of the output tensors are same sizes,
@@ -42,7 +43,15 @@ class TrainingManager(GraphExecutionManager):
         forward_outputs = C.OrtValueVector()
         # Run and return module outputs.
         execution_session.run_forward(forward_inputs, forward_outputs, state)
-        user_outputs = tuple(_utils._ortvalue_to_torch_tensor(forward_output) for forward_output in forward_outputs)
+
+        user_outputs = []
+        for i in range(len(forward_outputs)):
+            if i < cache_start:
+                user_outputs.append(_utils._ortvalue_to_torch_tensor(forward_outputs[i]))
+            elif cache !=None:
+                cache.insert(cache_names[i-cache_start], forward_outputs[i])
+
+        user_outputs = tuple(user_outputs)
 
         output_info = [(output.shape, output.device, output.dtype) for output in user_outputs]
         run_info = RunStateInfo(state, output_info)
@@ -100,6 +109,9 @@ class TrainingManager(GraphExecutionManager):
                 if self._loglevel <= _logger.LogLevel.WARNING:
                     warnings.warn("Fast path enabled - skipping checks for rebuilding gradient graph, execution agent creation, and device during training.",
                                   UserWarning)
+        # create cache object
+        if self._enable_grad_acc_optimization and self._cache == None:
+            self._cache = C.OrtValueCache()
 
         class _ORTModuleFunction(torch.autograd.Function):
             '''Use a custom torch.autograd.Function to associate self.backward_graph as the
@@ -121,7 +133,9 @@ class TrainingManager(GraphExecutionManager):
                     _utils._check_same_device(self._device, "Input argument to forward", *inputs)
 
                 user_outputs, ctx.run_info = TrainingManager.execution_session_run_forward(self._execution_agent,
-                                                                                           self._onnx_models.optimized_model,
+                                                                                           self._cache,
+                                                                                           self._graph_info.cached_node_arg_name,
+                                                                                           len(self._graph_info.user_output_names),
                                                                                            *inputs)
 
                 # Disable materializing grads then None object will not be
@@ -134,7 +148,9 @@ class TrainingManager(GraphExecutionManager):
                 # as this tensor is also kept in ORT's PartialGraphState
                 # This call is to invoke pytorch's version check to detect the potential inplace corruption
                 for idx in self._graph_info.module_output_indices_requires_save_for_backward:
-                    ctx.save_for_backward(user_outputs[idx])
+                    # only user outputs that are handed over to torch need this check
+                    if idx < len(self._graph_info.user_output_names):
+                        ctx.save_for_backward(user_outputs[idx])
 
                 # Mark the outputs tensors non-differentiable if requires_grad is False in _graph_info
                 # This will return torch the output tensors with correct requires_grad settings
@@ -246,7 +262,7 @@ class TrainingManager(GraphExecutionManager):
             C.OrtDevice(get_ort_device_type(self._device.type),
                         C.OrtDevice.default_memory(),
                         _utils.get_device_index(self._device)
-            )] * len(self._graph_info.user_output_names)
+            )] * (len(self._graph_info.user_output_names) + len(self._graph_info.frontier_node_arg_map))
 
         bw_fetches_names = [output.name for output in self._onnx_models.optimized_model.graph.output]
         bw_outputs_device_info = [
