@@ -203,10 +203,8 @@ jobs:
 
 - template: win-ci.yml
   parameters:
-    IsReleaseBuild: ${{ parameters.IsReleaseBuild }}
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
-    OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
     job_name_suffix: CPU_arm64_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env.bat
     buildArch: x64
@@ -218,10 +216,8 @@ jobs:
 
 - template: win-ci.yml
   parameters:
-    IsReleaseBuild: ${{ parameters.IsReleaseBuild }}
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
-    OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
     job_name_suffix: CPU_x64_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env.bat
     buildArch: x64
