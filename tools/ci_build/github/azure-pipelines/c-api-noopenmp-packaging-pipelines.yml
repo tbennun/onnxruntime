@@ -164,7 +164,7 @@ jobs:
   pool: 'Win-CPU-2021'
   dependsOn:
   - Linux_C_API_Packaging_GPU_x64
-  - Windows_Packaging_CPU_gpu
+  - Windows_Packaging_gpu
   condition: succeeded()
   steps:
   - checkout: self

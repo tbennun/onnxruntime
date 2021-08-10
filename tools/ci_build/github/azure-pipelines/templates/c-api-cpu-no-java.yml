@@ -155,7 +155,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: x86_openmp
+    job_name_suffix: CPU_x86_openmp
     EnvSetupScript: setup_env_x86.bat
     buildArch: x86
     msbuildPlatform: Win32
@@ -170,7 +170,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: arm_openmp
+    job_name_suffix: CPU_arm_openmp
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: arm
@@ -185,7 +185,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: arm64_openmp
+    job_name_suffix: CPU_arm64_openmp
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: arm64
@@ -200,7 +200,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: x64_openmp
+    job_name_suffix: CPU_x64_openmp
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: x64

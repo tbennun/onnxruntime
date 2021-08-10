@@ -75,6 +75,12 @@ jobs:
        ls -al $(Build.ArtifactStagingDirectory)
       displayName: 'Create Artifacts'
 
+    - task: BinSkim@4
+      displayName: 'Run BinSkim'
+      inputs:
+        AnalyzeTargetGlob: '$(Build.BinariesDirectory)/Release/**/*.so'
+      continueOnError: true
+
     - task: PublishPipelineArtifact@0
       displayName: 'Publish Pipeline Artifact'
       inputs:
@@ -171,11 +177,9 @@ jobs:
 
 - template: win-ci.yml
   parameters:
-    IsReleaseBuild: ${{ parameters.IsReleaseBuild }}
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
-    OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: x86_${{ parameters.BuildVariant }}
+    job_name_suffix: CPU_x86_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env_x86.bat
     buildArch: x86
     msbuildPlatform: Win32
@@ -186,11 +190,9 @@ jobs:
 
 - template: win-ci.yml
   parameters:
-    IsReleaseBuild: ${{ parameters.IsReleaseBuild }}
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
-    OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: arm_${{ parameters.BuildVariant }}
+    job_name_suffix: CPU_arm_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: arm
@@ -205,7 +207,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: arm64_${{ parameters.BuildVariant }}
+    job_name_suffix: CPU_arm64_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: arm64
@@ -220,7 +222,7 @@ jobs:
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
     OrtNugetPackageId: ${{ parameters.OrtNugetPackageId }}
-    job_name_suffix: x64_${{ parameters.BuildVariant }}
+    job_name_suffix: CPU_x64_${{ parameters.BuildVariant }}
     EnvSetupScript: setup_env.bat
     buildArch: x64
     msbuildPlatform: x64
