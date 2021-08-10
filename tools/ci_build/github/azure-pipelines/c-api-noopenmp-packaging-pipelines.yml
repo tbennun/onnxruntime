@@ -84,11 +84,9 @@ jobs:
 
 - template: templates/win-ci.yml
   parameters:
-    IsReleaseBuild: ${{ parameters.IsReleaseBuild }}
     ort_build_pool_name: 'onnxruntime-gpu-winbuild'
     DoCompliance: ${{ parameters.DoCompliance }}
     DoEsrp: ${{ parameters.DoEsrp }}
-    OrtNugetPackageId: 'Microsoft.ML.OnnxRuntime.Gpu'
     job_name_suffix: gpu
     EnvSetupScript: setup_env_cuda_11.bat
     buildArch: x64
@@ -98,6 +96,63 @@ jobs:
     runTests: ${{ parameters.RunOnnxRuntimeTests }}
     buildJava: true
     java_artifact_id: onnxruntime_gpu
+    
+
+- template: templates/win-ci.yml
+  parameters:
+    ort_build_pool_name: 'onnxruntime-gpu-winbuild'
+    DoCompliance: ${{ parameters.DoCompliance }}
+    DoEsrp: ${{ parameters.DoEsrp }}
+    job_name_suffix: dml_x64
+    EnvSetupScript: setup_env.bat
+    buildArch: x64
+    msbuildPlatform: x64
+    packageName: dml-x64
+    buildparameter: --enable_onnx_tests --enable_wcos --use_dml --use_winml
+    runTests: ${{ parameters.RunOnnxRuntimeTests }}
+    buildJava: false
+
+- template: templates/win-ci.yml
+  parameters:
+    ort_build_pool_name: 'onnxruntime-gpu-winbuild'
+    DoCompliance: ${{ parameters.DoCompliance }}
+    DoEsrp: ${{ parameters.DoEsrp }}
+    job_name_suffix: dml_x86
+    EnvSetupScript: setup_env.bat
+    buildArch: x86
+    msbuildPlatform: Win32
+    packageName: dml-x86
+    buildparameter: --enable_onnx_tests --enable_wcos --use_dml --use_winml
+    runTests: ${{ parameters.RunOnnxRuntimeTests }}
+    buildJava: false
+
+- template: templates/win-ci.yml
+  parameters:
+    ort_build_pool_name: 'onnxruntime-gpu-winbuild'
+    DoCompliance: ${{ parameters.DoCompliance }}
+    DoEsrp: ${{ parameters.DoEsrp }}
+    job_name_suffix: dml_arm64
+    EnvSetupScript: setup_env.bat
+    buildArch: x64
+    msbuildPlatform: arm64
+    packageName: dml-arm64
+    buildparameter: --enable_onnx_tests --enable_wcos --use_dml --use_winml --arm64
+    runTests: ${{ parameters.RunOnnxRuntimeTests }}
+    buildJava: false
+
+- template: templates/win-ci.yml
+  parameters:
+    ort_build_pool_name: 'onnxruntime-gpu-winbuild'
+    DoCompliance: ${{ parameters.DoCompliance }}
+    DoEsrp: ${{ parameters.DoEsrp }}
+    job_name_suffix: dml_arm
+    EnvSetupScript: setup_env.bat
+    buildArch: x64
+    msbuildPlatform: arm
+    packageName: dml-arm
+    buildparameter: --enable_onnx_tests --enable_wcos --use_dml --use_winml --arm
+    runTests: ${{ parameters.RunOnnxRuntimeTests }}
+    buildJava: false
 
 - template: templates/android-java-api-aar.yml
   parameters:
