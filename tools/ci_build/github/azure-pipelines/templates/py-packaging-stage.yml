@@ -177,18 +177,6 @@ stages:
         inputs:
           ArtifactName: onnxruntime
 
-      - task: CmdLine@2
-        displayName: 'Unzip wheel and check the binaries'
-        inputs:
-          script: |
-            tar -zxf $(Build.ArtifactStagingDirectory)/Release/dist/*.whl
-
-      - task: BinSkim@4
-        displayName: 'Run BinSkim'
-        inputs:
-          AnalyzeTargetGlob: '+:file|$(Build.ArtifactStagingDirectory)/**/*.so'
-        continueOnError: true
-
       - template: component-governance-component-detection-steps.yml
         parameters:
           condition: 'succeeded'
