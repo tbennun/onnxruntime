@@ -24,7 +24,6 @@ class TrainingManager(GraphExecutionManager):
     def __init__(self, model, debug_options):
         super().__init__(model, debug_options)
         self._export_mode = torch.onnx.TrainingMode.TRAINING
-        self._cache = None
 
     @staticmethod
     def execution_session_run_forward(execution_session, onnx_model, cache, cache_names, cache_start, *inputs):
@@ -42,7 +41,7 @@ class TrainingManager(GraphExecutionManager):
 
         forward_outputs = C.OrtValueVector()
         # Run and return module outputs.
-        execution_session.run_forward(forward_inputs, forward_outputs, state)
+        execution_session.run_forward(forward_inputs, forward_outputs, state, cache)
 
         user_outputs = []
         for i in range(len(forward_outputs)):
@@ -110,8 +109,25 @@ class TrainingManager(GraphExecutionManager):
                     warnings.warn("Fast path enabled - skipping checks for rebuilding gradient graph, execution agent creation, and device during training.",
                                   UserWarning)
         # create cache object
-        if self._enable_grad_acc_optimization and self._cache == None:
-            self._cache = C.OrtValueCache()
+        if self._enable_grad_acc_optimization:
+            if self._cache == None:
+                self._cache = C.OrtValueCache()
+
+            # parse param versions to detect change or no change
+            if self._param_version_map == None:
+                self._param_version_map = dict()
+
+            for name, param in self._flattened_module.named_parameters():
+                if name in self._graph_info.frontier_node_arg_map:
+                    arg_name = self._graph_info.frontier_node_arg_map[name]
+                    if name not in self._param_version_map:
+                        self._param_version_map[name] = param._version
+                    elif param._version != self._param_version_map[name]:
+                        # there is an updated param, so remove entry from cache
+                        # in order to recompute the value
+                        if self._cache.count(arg_name):
+                            self._cache.remove(arg_name)
+                        self._param_version_map[name] = param._version
 
         class _ORTModuleFunction(torch.autograd.Function):
             '''Use a custom torch.autograd.Function to associate self.backward_graph as the
@@ -197,7 +213,7 @@ class TrainingManager(GraphExecutionManager):
 
                 # Run and get results
                 backward_outputs = C.OrtValueVector()
-                self._execution_agent.run_backward(backward_inputs, backward_outputs, ctx.run_info.state)
+                self._execution_agent.run_backward(backward_inputs, backward_outputs, ctx.run_info.state, self._cache)
                 # Destroy the state immediately (as opposed to be at the mercy of garbage collector) so it does not
                 # affect peak memory usage in a subsequent graph run.
                 del ctx.run_info.state
