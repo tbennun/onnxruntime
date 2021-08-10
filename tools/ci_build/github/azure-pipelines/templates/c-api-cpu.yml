@@ -466,7 +466,7 @@ jobs:
       arguments: '--configuration RelWithDebInfo -p:Platform="Any CPU" -p:OnnxRuntimeBuildDirectory="$(Build.BinariesDirectory)" -p:OrtPackageId=$(OrtPackageId)'
       workingDirectory: '$(Build.SourcesDirectory)\csharp'
 
-  - task: BinSkim@3
+  - task: BinSkim@4
     displayName: 'Run BinSkim'
 
   - task: RoslynAnalyzers@2
