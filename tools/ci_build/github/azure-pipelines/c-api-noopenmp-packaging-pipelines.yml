@@ -299,7 +299,7 @@ jobs:
 
 
 
-- job: NuGet_Packaging
+- job: NuGet_Packaging_GPU
   workspace:
     clean: all
   pool: 'Win-CPU-2021'
