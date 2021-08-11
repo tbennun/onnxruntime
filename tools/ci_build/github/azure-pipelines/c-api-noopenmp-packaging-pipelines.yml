@@ -42,51 +42,7 @@ jobs:
       project: '530acbc4-21bc-487d-8cd8-348ff451d2ff'
       definition: 940
       buildVersionToDownload: specific
-      pipelineId: 168260
-
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Pipeline Artifact - NuGet'
-    inputs:
-      artifactName: 'onnxruntime-win-dml-x64'
-      targetPath: '$(Build.BinariesDirectory)/nuget-artifact'
-      buildType: specific
-      project: '530acbc4-21bc-487d-8cd8-348ff451d2ff'
-      definition: 940
-      buildVersionToDownload: specific
-      pipelineId: 168260
-      
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Pipeline Artifact - NuGet'
-    inputs:
-      artifactName: 'onnxruntime-win-dml-x86'
-      targetPath: '$(Build.BinariesDirectory)/nuget-artifact'
-      buildType: specific
-      project: '530acbc4-21bc-487d-8cd8-348ff451d2ff'
-      definition: 940
-      buildVersionToDownload: specific
-      pipelineId: 168260
-
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Pipeline Artifact - NuGet'
-    inputs:
-      artifactName: 'onnxruntime-win-arm'
-      targetPath: '$(Build.BinariesDirectory)/nuget-artifact'
-      buildType: specific
-      project: '530acbc4-21bc-487d-8cd8-348ff451d2ff'
-      definition: 940
-      buildVersionToDownload: specific
-      pipelineId: 168260
-
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Pipeline Artifact - NuGet'
-    inputs:
-      artifactName: 'onnxruntime-win-arm64'
-      targetPath: '$(Build.BinariesDirectory)/nuget-artifact'
-      buildType: specific
-      project: '530acbc4-21bc-487d-8cd8-348ff451d2ff'
-      definition: 940
-      buildVersionToDownload: specific
-      pipelineId: 168260
+      pipelineId: 168260  
 
   - task: DownloadPipelineArtifact@2
     displayName: 'Download Pipeline Artifact - NuGet'
@@ -168,7 +124,7 @@ jobs:
   - task: BatchScript@1
     displayName: 'Bundle Native NuGet and other binaries'
     inputs:
-      filename: $(Build.SourcesDirectory)\tools\ci_build\github\windows\bundle_dlls.bat
+      filename: $(Build.SourcesDirectory)\tools\ci_build\github\windows\bundle_dlls_gpu.bat
       workingFolder: $(Build.BinariesDirectory)\RelWithDebInfo\RelWithDebInfo\nuget-artifacts
 
   - task: CopyFiles@2
@@ -195,7 +151,7 @@ jobs:
     parameters:
       NugetPath: '$(Build.ArtifactStagingDirectory)'
       NugetPackage: 'Microsoft.ML.OnnxRuntime.*nupkg'
-      PlatformsSupported: 'win-x64,win-x86,linux-x64'
+      PlatformsSupported: 'win-x64,linux-x64'
       VerifyNugetSigning: false
 
   - task: PublishPipelineArtifact@0
