@@ -245,7 +245,9 @@ class GraphExecutionManager(GraphExecutionInterface):
             return False
 
         self._set_device_from_module(inputs, kwargs)
-        self._onnx_models.exported_model = self._get_exported_model(*inputs, **kwargs)
+
+        # Pass in the extracted schema directly to the self._input_info to prevent extracting the schema multiple times
+        self._onnx_models.exported_model = self._get_exported_model(schema, *inputs, **kwargs)
         _cpp_ext._load_aten_op_executor_cpp_extension_if_needed(self._onnx_models.exported_model)
         if self._debug_options.save_onnx_models.save:
             self._onnx_models.save_exported_model(self._debug_options.save_onnx_models.path,
@@ -258,8 +260,8 @@ class GraphExecutionManager(GraphExecutionInterface):
 
         return True
 
-    def _get_exported_model(self, *inputs, **kwargs):
-        '''Exports PyTorch `self._flattened_module` to ONNX for inferencing or training, using `*inputs` as input
+    def _get_exported_model(self, input_schema, *inputs, **kwargs):
+        '''Exports PyTorch `self._flattened_module` to ONNX for inferencing or training, using `*inputs` and `**kwargs` as input
 
         TODO: How to support dynamic axes? Dimensions are determined by samples
         '''
@@ -267,6 +269,7 @@ class GraphExecutionManager(GraphExecutionInterface):
         # Setup dynamic axes for onnx model
         self._input_info = _io.parse_inputs_for_onnx_export(self._module_parameters,
                                                             None,
+                                                            input_schema,
                                                             inputs,
                                                             kwargs)
         output_names, output_dynamic_axes, self._module_output_schema = \
