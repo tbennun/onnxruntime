@@ -19,6 +19,11 @@ jobs:
       buildVersionToDownload: specific
       pipelineId: 168696
 
+  - task: CmdLine@2
+    inputs:
+      script: |
+        python3 -m pip install pandas
+
   - task: AzureCLI@2
     displayName: 'Azure CLI '
     inputs:
