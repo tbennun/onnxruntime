@@ -2,7 +2,7 @@ jobs:
 - job: Upload
   workspace:
     clean: all
-  pool: 'Win-CPU-2021'
+  pool: 'Linux-CPU'
   condition: succeeded()
   steps:
   - checkout: self
@@ -22,27 +22,14 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        python3 -m pip install pandas azure-kusto-data azure-kusto-ingest
+        python3 -m pip install pandas
 
   - task: AzureCLI@2
-    displayName: 'Azure CLI '
+    displayName: 'Azure CLI'
     inputs:
       azureSubscription: AIInfraBuildOnnxRuntimeOSS
-      scriptType: batch
-      scriptLocation: inlineScript
-      inlineScript: 'python3 $(Build.SourcesDirectory)/tools/ci_build/github/windows/post_code_coverage_to_dashboard.py --commit_hash=$(OnnxRuntimeGitCommitHash) --report_file="$(Build.BinariesDirectory)/report.json" --report_url="https://aiinfra.visualstudio.com/Lotus/_build/results?buildId=$(Build.BuildId)" --branch $(Build.SourceBranchName) --arch $(Agent.OSArchitecture) --os $(Agent.OS) --build_config default'
+      scriptType: bash
+      scriptPath: dddd
+      inlineScript: $(Build.SourcesDirectory)/tools/ci_build/github/linux/upload_code_coverage_data.sh
       workingDirectory: '$(Build.BinariesDirectory)'
 
-  - task: CmdLine@2
-    inputs:
-      script: |
-        rm -f $(Build.BinariesDirectory)/report.json
-      
-  - task: AzureFileCopy@4
-    displayName: 'AzureBlob File Copy'
-    inputs:
-      SourcePath: '$(Build.BinariesDirectory)\*'
-      azureSubscription: AIInfraBuildOnnxRuntimeOSS
-      Destination: AzureBlob
-      storage: onnxruntime
-      ContainerName: '$web'
