@@ -11,7 +11,6 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: 'Download Pipeline Artifact'
     inputs:
-      buildType: 'current'
       artifactName: 'html'
       targetPath: '$(Build.BinariesDirectory)'
       buildType: specific
