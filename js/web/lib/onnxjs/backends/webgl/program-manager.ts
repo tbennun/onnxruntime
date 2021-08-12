@@ -9,6 +9,7 @@ import {getVertexShaderSource} from './glsl-source';
 import {TextureLayoutStrategy} from './texture-layout-strategy';
 import {Artifact, ProgramInfo, RunData, TextureData, UniformData, VariableInfo} from './types';
 import {WebGLContext} from './webgl-context';
+import {STAT} from './webgl-stat';
 
 /**
  * ProgramManager is the main class behind running computations
@@ -98,6 +99,7 @@ ${fragShaderScript}
     }
     const fragShader = this.glContext.compileShader(fragShaderScript, this.glContext.gl.FRAGMENT_SHADER);
     const program = this.glContext.createProgram(this.vertexShader, fragShader);
+    STAT.countArtifactBuilt++;
     this.glContext.deleteShader(fragShader);
     return program;
   }
