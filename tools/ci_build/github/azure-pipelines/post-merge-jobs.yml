@@ -29,7 +29,6 @@ jobs:
     inputs:
       azureSubscription: AIInfraBuildOnnxRuntimeOSS
       scriptType: bash
-      scriptPath: dddd
-      inlineScript: $(Build.SourcesDirectory)/tools/ci_build/github/linux/upload_code_coverage_data.sh
+      scriptPath: $(Build.SourcesDirectory)/tools/ci_build/github/linux/upload_code_coverage_data.sh
       workingDirectory: '$(Build.BinariesDirectory)'
 
