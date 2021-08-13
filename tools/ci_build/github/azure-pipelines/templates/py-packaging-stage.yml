@@ -103,9 +103,9 @@ stages:
 
       - template: get-docker-image-steps.yml
         parameters:
-          Dockerfile: tools/ci_build/github/linux/docker/${{ Dockerfile }}
+          Dockerfile: tools/ci_build/github/linux/docker/$(Dockerfile)
           Context: tools/ci_build/github/linux/docker
-          DockerBuildArgs: "--build-arg BUILD_UID=$( id -u )"
+          DockerBuildArgs: $(DockerBuildArgs)
           Repository: onnxruntimecpubuild
 
       - task: CmdLine@2
