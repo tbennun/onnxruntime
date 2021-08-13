@@ -7,6 +7,7 @@ from .debug_options import DebugOptions, LogLevel
 from . import _utils, _io, _logger, torch_cpp_extensions as _cpp_ext, _onnx_models
 from ._custom_autograd_function_exporter import _post_process_after_export
 from ._graph_execution_interface import GraphExecutionInterface
+from ._gradient_accumulation_manager import GradientAccumulationManager
 from onnxruntime.training.ortmodule import ONNX_OPSET_VERSION
 
 from onnxruntime.capi import _pybind_state as C
@@ -146,8 +147,7 @@ class GraphExecutionManager(GraphExecutionInterface):
 
         # WIP feature to enable caching in Gradient accumulation scenario.
         self._enable_grad_acc_optimization = False
-        self._param_version_map = None
-        self._cache = C.OrtValueCache()
+        self._gradient_accumulation_manager = GradientAccumulationManager()
 
     def _get_torch_gpu_allocator_function_addresses(self):
         if self._use_external_gpu_allocator and torch.cuda.is_available():
