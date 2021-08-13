@@ -140,10 +140,9 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
   }
 
   ExecutionFrame frame{feed_mlvalue_idxs, feeds, fetch_mlvalue_idxs, fetches, fetch_allocators, session_state};
-  const std::unordered_set<NodeIndex>* to_be_executed_nodes = nullptr;
 
 #if !defined(ORT_MINIMAL_BUILD)
-  to_be_executed_nodes = session_state.GetToBeExecutedNodes(fetch_mlvalue_idxs);
+  const auto* const to_be_executed_nodes = session_state.GetToBeExecutedNodes(fetch_mlvalue_idxs);
   const bool only_execute_path_to_fetches = only_execute_path_to_fetches_ && (to_be_executed_nodes != nullptr);
 
   if (only_execute_path_to_fetches) {
@@ -151,7 +150,6 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
   }
 #else
   ORT_UNUSED_PARAMETER(only_execute_path_to_fetches_);
-  const bool only_execute_path_to_fetches = false;
 #endif
 
   LOGS(logger, INFO) << "Begin execution";
@@ -169,8 +167,8 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
 #ifdef CONCURRENCY_VISUALIZER
   // need unique name for the series. number of nodes should be good enough for a subgraph
   char series_name[MaxSeriesNameLengthInChars] = "MainGraph";
-  if (graph_viewer->IsSubgraph()) {
-    auto s = graph_viewer->ParentNode()->Name().substr(0, MaxSeriesNameLengthInChars - 1);
+  if (graph_viewer.IsSubgraph()) {
+    auto s = graph_viewer.ParentNode()->Name().substr(0, MaxSeriesNameLengthInChars - 1);
     std::copy(s.cbegin(), s.cend(), series_name);
   }
 
@@ -196,10 +194,12 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
 
     auto node_index = node_exec_plan.node_index;
 
+#if !defined(ORT_MINIMAL_BUILD)
     // If it is not necessary to execute the node.
     if (only_execute_path_to_fetches && to_be_executed_nodes->count(node_index) == 0) {
       continue;
     }
+#endif
 
     const auto& node = *graph_viewer.GetNode(node_exec_plan.node_index);
 
@@ -285,7 +285,7 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
                                                      node_name_for_profiling + "_fence_before",
                                                      sync_time_begin,
                                                      {{"op_name", p_op_kernel->KernelDef().OpName()}});
-
+      concurrency::ThreadPool::StartProfiling(session_state.GetThreadPool());
       // call compute on the kernel
       VLOGS(logger, 1) << "Computing kernel: " << node_name_for_profiling;
 
@@ -369,8 +369,8 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
                                                          {"activation_size", std::to_string(input_activation_sizes)},
                                                          {"parameter_size", std::to_string(input_parameter_sizes)},
                                                          {"output_size", std::to_string(total_output_sizes)},
+                                                         {"thread_scheduling_stats", concurrency::ThreadPool::StopProfiling(session_state.GetThreadPool())},
                                                      });
-
       sync_time_begin = session_state.Profiler().StartTime();
     }
 
@@ -467,7 +467,7 @@ Status SequentialExecutor::Execute(const SessionState& session_state, const std:
     }
 
     if (all_tensors) {
-      auto mem_patterns = onnxruntime::make_unique<MemoryPatternGroup>();
+      auto mem_patterns = std::make_unique<MemoryPatternGroup>();
       ORT_RETURN_IF_ERROR(frame.GeneratePatterns(mem_patterns.get()));
       ORT_RETURN_IF_ERROR(session_state.UpdateMemoryPatternGroupCache(input_shapes, std::move(mem_patterns)));
     }

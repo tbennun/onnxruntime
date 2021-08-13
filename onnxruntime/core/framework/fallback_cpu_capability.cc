@@ -14,18 +14,26 @@ using namespace ONNX_NAMESPACE::Utils;
 namespace onnxruntime {
 
 namespace {
-const int64_t Small_Initializer_Threshold = 100;
+const int64_t kSmallInitializerThreshold = 100;
 
-bool IsSmallInitializerWithSingleConsumer(const onnxruntime::GraphViewer& graph, const NodeArg* arg) {
-  const ONNX_NAMESPACE::TensorProto* initializer_tensor;
-  if (!graph.GetInitializedTensor(arg->Name(), initializer_tensor))
+static bool IsSmallInitializer(const onnxruntime::GraphViewer& graph, const NodeArg* arg) {
+  // 'true' in the function call is to let the searching for the initializer
+  // continue in the outer scopes of the current (sub-)graph if applicable
+  const ONNX_NAMESPACE::TensorProto* initializer_tensor =
+      graph.GetGraph().GetInitializer(arg->Name(), true);
+
+  // Not an initializer at all
+  if (initializer_tensor == nullptr) {
     return false;
+  }
+
+  // Check if "small" enough
   int64_t size = 1;
   for (auto& dim : initializer_tensor->dims()) {
     size *= dim;
   }
-  return size <= Small_Initializer_Threshold &&
-         graph.GetConsumerNodes(arg->Name()).size() == 1;
+
+  return size <= kSmallInitializerThreshold;
 }
 }  // namespace
 
@@ -112,7 +120,7 @@ std::unordered_set<NodeIndex> GetCpuPreferredNodes(const onnxruntime::GraphViewe
       }
 
       // allow placing on CPU if it's a small initializer or graph input
-      if (IsSmallInitializerWithSingleConsumer(graph, input) ||
+      if (IsSmallInitializer(graph, input) ||
           std::find(graph_inputs.begin(), graph_inputs.end(), input) != graph_inputs.end()) {
         continue;
       }
@@ -132,7 +140,9 @@ std::unordered_set<NodeIndex> GetCpuPreferredNodes(const onnxruntime::GraphViewe
 
     if (place_in_cpu) {
       cpu_nodes.insert(cur);
-      LOGS_DEFAULT(WARNING) << "Force fallback to CPU execution for node: " << node->Name();
+      LOGS_DEFAULT(INFO) << "ORT optimization- Force fallback to CPU execution for node: " << node->Name()
+                         << " because the CPU execution path is deemed faster than overhead involved with execution on other EPs "
+                         << " capable of executing this node";
       for (auto* output : node->OutputDefs()) {
         cpu_output_args.insert(output);
       }
