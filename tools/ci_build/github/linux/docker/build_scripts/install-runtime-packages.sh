@@ -137,7 +137,6 @@ elif [ "${AUDITWHEEL_POLICY}" == "manylinux_2_28" ]; then
  		  dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
  		fi		
 	fi
-	TOOLCHAIN_DEPS="${TOOLCHAIN_DEPS} glibc-langpack-*"
 elif [ "${AUDITWHEEL_POLICY}" == "manylinux_2_24" ]; then
 	PACKAGE_MANAGER=apt
 	BASETOOLS="${BASETOOLS} hostname"

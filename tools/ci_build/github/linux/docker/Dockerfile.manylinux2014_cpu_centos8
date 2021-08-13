@@ -29,6 +29,7 @@ COPY build_scripts/install-entrypoint.sh build_scripts/update-system-packages.sh
 RUN bash /build_scripts/install-entrypoint.sh && rm -rf /build_scripts
 COPY manylinux-entrypoint /usr/local/bin/manylinux-entrypoint
 ENTRYPOINT ["manylinux-entrypoint"]
+ENV  ACLOCAL_PATH /usr/local/share/aclocal:/usr/share/aclocal
 
 COPY build_scripts/install-runtime-packages.sh build_scripts/update-system-packages.sh /build_scripts/
 RUN manylinux-entrypoint /build_scripts/install-runtime-packages.sh && rm -rf /build_scripts/
@@ -58,16 +59,6 @@ RUN export PATCHELF_VERSION=0.13 && \
     export PATCHELF_HASH=60c6aeadb673de9cc1838b630c81f61e31c501de324ef7f1e8094a2431197d09 && \
     export PATCHELF_DOWNLOAD_URL=https://github.com/NixOS/patchelf/archive && \
     manylinux-entrypoint /build_scripts/install-patchelf.sh
-
-COPY build_scripts/install-libxcrypt.sh /build_scripts/
-RUN export LIBXCRYPT_VERSION=4.4.23 && \
-    export LIBXCRYPT_HASH=9cbbcb795ed5d121a1613eb0e40c77173b53e15a746796fc7cd7bd71cfd64533 && \
-    export LIBXCRYPT_DOWNLOAD_URL=https://github.com/besser82/libxcrypt/archive && \
-    export PERL_ROOT=perl-5.34.0 && \
-    export PERL_HASH=551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a && \
-    export PERL_DOWNLOAD_URL=https://www.cpan.org/src/5.0 && \
-    manylinux-entrypoint /build_scripts/install-libxcrypt.sh
-
 
 FROM runtime_base AS build_base
 COPY build_scripts/install-build-packages.sh /build_scripts/
@@ -170,7 +161,7 @@ CMD ["/bin/bash"]
 
 #Build manylinux2014 docker image end
 
-ENV PATH /usr/local/gradle/bin:/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH /usr/local/gradle/bin:$PATH
 
 ADD scripts /tmp/scripts
 RUN cd /tmp/scripts && /tmp/scripts/manylinux/install_centos.sh && /tmp/scripts/manylinux/install_deps.sh && rm -rf /tmp/scripts
